@@ -1,10 +1,23 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { AuthUser, AuthSession, UserRole } from '@/types/auth';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { AuthUser, UserRole } from '@/types/auth';
 import { supabase, isSupabaseConfigured } from './supabase';
+import { generateLicenseKey } from './license-service';
 
 const AUTH_STORAGE_KEY = 'dr_vale_auth_session_v1';
+const MASTER_PRICING_KEY = 'dr_vale_master_pricing_v1';
+
+interface CompanyOnboardingData {
+  name: string;
+  tradeName: string;
+  cnpj: string;
+  phone: string;
+  city: string;
+  state: string;
+  responsibleName: string;
+  responsibleRole: string;
+}
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -12,15 +25,14 @@ interface AuthContextType {
   isMaster: boolean;
   isDemo: boolean;
   isLoading: boolean;
-  loginWithEmail: (email: string, pass: string) => Promise<{ success: boolean; isMaster: boolean; message?: string }>;
+  loginWithEmail: (email: string, pass: string) => Promise<{ success: boolean; isMaster: boolean; isProfileComplete: boolean; message?: string }>;
   registerWithEmail: (
     email: string,
     pass: string,
-    name: string,
-    companyName: string
-  ) => Promise<{ success: boolean; message?: string }>;
-  loginWithGoogle: () => Promise<{ success: boolean; isMaster: boolean; message?: string }>;
-  loginAsDemo: (companyName?: string) => { success: boolean; isMaster: boolean };
+    name: string
+  ) => Promise<{ success: boolean; requiresEmailVerification?: boolean; message?: string }>;
+  loginWithGoogle: () => Promise<{ success: boolean; isMaster: boolean; isProfileComplete: boolean; message?: string }>;
+  completeOnboarding: (companyData: CompanyOnboardingData) => void;
   logout: () => void;
   switchRoleForDev: (role: UserRole) => void;
 }
@@ -42,14 +54,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const sbUser = data.session.user;
             const email = (sbUser.email || '').toLowerCase();
             const isMaster = email === 'renanreis.dev@gmail.com' || email.includes('master');
+            
+            // Check if user has already completed onboarding
+            const savedRaw = localStorage.getItem(AUTH_STORAGE_KEY);
+            const savedParsed = savedRaw ? JSON.parse(savedRaw) : null;
+            const isProfileComplete = isMaster || (savedParsed ? !!savedParsed.isProfileComplete : false);
+
             const authUser: AuthUser = {
               id: sbUser.id,
               email,
               name: sbUser.user_metadata?.full_name || sbUser.user_metadata?.name || email.split('@')[0],
               avatarUrl: sbUser.user_metadata?.avatar_url,
-              companyName: sbUser.user_metadata?.company_name || 'Minha Empresa',
+              companyName: sbUser.user_metadata?.company_name || savedParsed?.companyName || '',
               role: isMaster ? 'master' : 'client',
               isMaster,
+              isProfileComplete,
+              emailVerified: !!sbUser.email_confirmed_at,
               createdAt: sbUser.created_at || new Date().toISOString(),
             };
             setUser(authUser);
@@ -92,9 +112,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (masterRes.ok) {
         const masterData = await masterRes.json();
         if (masterData.success && masterData.user) {
-          setUser(masterData.user);
-          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(masterData.user));
-          return { success: true, isMaster: true };
+          const masterUser: AuthUser = {
+            ...masterData.user,
+            isProfileComplete: true,
+          };
+          setUser(masterUser);
+          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(masterUser));
+          return { success: true, isMaster: true, isProfileComplete: true };
         }
       }
     } catch {
@@ -109,47 +133,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        return { success: false, isMaster: false, message: error.message };
+        return { success: false, isMaster: false, isProfileComplete: false, message: error.message };
       }
 
       const isMaster = cleanEmail === 'renanreis.dev@gmail.com';
+      const savedRaw = localStorage.getItem(AUTH_STORAGE_KEY);
+      const savedParsed = savedRaw ? JSON.parse(savedRaw) : null;
+      const isProfileComplete = isMaster || (savedParsed ? !!savedParsed.isProfileComplete : false);
+
       const authUser: AuthUser = {
         id: data.user.id,
         email: cleanEmail,
         name: data.user.user_metadata?.full_name || cleanEmail.split('@')[0],
-        companyName: data.user.user_metadata?.company_name || 'SIDIAL FERRAGENS',
+        companyName: data.user.user_metadata?.company_name || savedParsed?.companyName || '',
         role: isMaster ? 'master' : 'client',
         isMaster,
+        isProfileComplete,
+        emailVerified: !!data.user.email_confirmed_at,
         createdAt: data.user.created_at,
       };
 
       setUser(authUser);
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authUser));
-      return { success: true, isMaster };
+      return { success: true, isMaster, isProfileComplete };
     }
 
-    // 3. Client login fallback for offline/demo
+    // 3. Client login fallback for offline
+    const savedRaw = localStorage.getItem(AUTH_STORAGE_KEY);
+    const savedParsed = savedRaw ? JSON.parse(savedRaw) : null;
+    const isProfileComplete = savedParsed?.email === cleanEmail ? !!savedParsed.isProfileComplete : false;
+
     const authUser: AuthUser = {
       id: crypto.randomUUID(),
       email: cleanEmail,
       name: cleanEmail.split('@')[0].toUpperCase(),
-      companyName: 'SIDIAL FERRAGENS',
+      companyName: savedParsed?.companyName || '',
       role: 'client',
       isMaster: false,
+      isProfileComplete,
       createdAt: new Date().toISOString(),
     };
 
     setUser(authUser);
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authUser));
-    return { success: true, isMaster: false };
+    return { success: true, isMaster: false, isProfileComplete };
   };
 
   // Register with Email
   const registerWithEmail = async (
     email: string,
     pass: string,
-    name: string,
-    companyName: string
+    name: string
   ) => {
     const cleanEmail = email.trim().toLowerCase();
 
@@ -160,7 +194,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         options: {
           data: {
             full_name: name,
-            company_name: companyName,
           },
         },
       });
@@ -174,15 +207,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           id: data.user.id,
           email: cleanEmail,
           name,
-          companyName,
+          companyName: '',
           role: 'client',
           isMaster: false,
+          isProfileComplete: false,
+          emailVerified: !!data.user.email_confirmed_at,
           createdAt: data.user.created_at,
         };
         setUser(authUser);
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authUser));
       }
-      return { success: true };
+      return { success: true, requiresEmailVerification: true };
     }
 
     // Offline registration simulation
@@ -190,15 +225,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       id: crypto.randomUUID(),
       email: cleanEmail,
       name,
-      companyName,
+      companyName: '',
       role: 'client',
       isMaster: false,
+      isProfileComplete: false,
+      emailVerified: true,
       createdAt: new Date().toISOString(),
     };
 
     setUser(authUser);
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authUser));
-    return { success: true };
+    return { success: true, requiresEmailVerification: false };
   };
 
   // Login with Google / Gmail
@@ -210,41 +247,89 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/` : undefined,
         },
       });
-      if (error) return { success: false, isMaster: false, message: error.message };
-      return { success: true, isMaster: false };
+      if (error) return { success: false, isMaster: false, isProfileComplete: false, message: error.message };
+      return { success: true, isMaster: false, isProfileComplete: false };
     }
 
     // Google Login simulation
+    const savedRaw = localStorage.getItem(AUTH_STORAGE_KEY);
+    const savedParsed = savedRaw ? JSON.parse(savedRaw) : null;
+    const isProfileComplete = savedParsed ? !!savedParsed.isProfileComplete : false;
+
     const authUser: AuthUser = {
-      id: 'google-user-1',
+      id: 'google-user-' + Date.now(),
       email: 'usuario.gmail@gmail.com',
       name: 'Usuário Google',
       avatarUrl: 'https://lh3.googleusercontent.com/a/default-user',
-      companyName: 'Minha Empresa Google',
+      companyName: savedParsed?.companyName || '',
       role: 'client',
       isMaster: false,
+      isProfileComplete,
+      emailVerified: true,
       createdAt: new Date().toISOString(),
     };
 
     setUser(authUser);
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authUser));
-    return { success: true, isMaster: false };
+    return { success: true, isMaster: false, isProfileComplete };
   };
 
-  // Instant 1-Click Demo Login
-  const loginAsDemo = (companyName: string = 'SIDIAL FERRAGENS') => {
-    const demoUser: AuthUser = {
-      id: 'demo-' + Date.now(),
-      email: 'demo.cliente@empresa.com.br',
-      name: 'Cliente em Demonstração',
-      companyName,
-      role: 'demo',
-      isMaster: false,
-      createdAt: new Date().toISOString(),
+  // Complete First Login Onboarding (Company Setup + Dynamic Trial Duration from Master Pricing)
+  const completeOnboarding = (companyData: CompanyOnboardingData) => {
+    if (!user) return;
+
+    // 1. Get trial duration from Master Pricing configuration
+    let trialDays = 14;
+    try {
+      const savedPricing = localStorage.getItem(MASTER_PRICING_KEY);
+      if (savedPricing) {
+        const parsedPricing = JSON.parse(savedPricing);
+        if (parsedPricing.trialDurationDays && Number(parsedPricing.trialDurationDays) > 0) {
+          trialDays = Number(parsedPricing.trialDurationDays);
+        }
+      }
+    } catch (e) {
+      console.error('Error reading master pricing:', e);
+    }
+
+    // 2. Generate trial license based on Master duration
+    const expDate = new Date(Date.now() + trialDays * 86400000);
+    const expDateStr = expDate.toISOString().slice(0, 10);
+    const generatedKey = generateLicenseKey('T30', companyData.name, expDateStr);
+
+    const trialLicense = {
+      isLicensed: true,
+      licenseKey: generatedKey,
+      planType: 'trial',
+      clientName: companyData.name.toUpperCase(),
+      expirationDate: expDate.toISOString(),
+      daysRemaining: trialDays,
+      isTrial: true,
+      maxEmployees: 50,
+      activatedAt: new Date().toISOString(),
     };
-    setUser(demoUser);
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(demoUser));
-    return { success: true, isMaster: false };
+
+    // 3. Save company & license in localStorage
+    localStorage.setItem('dr_vale_company_settings_v1', JSON.stringify({
+      name: companyData.name.toUpperCase(),
+      tradeName: companyData.tradeName.toUpperCase(),
+      cnpj: companyData.cnpj,
+      phone: companyData.phone,
+      city: companyData.city,
+      state: companyData.state.toUpperCase(),
+      responsibleName: companyData.responsibleName,
+      responsibleRole: companyData.responsibleRole,
+    }));
+    localStorage.setItem('dr_vale_license_v1', JSON.stringify(trialLicense));
+
+    // 4. Update Auth User
+    const updatedUser: AuthUser = {
+      ...user,
+      companyName: companyData.name.toUpperCase(),
+      isProfileComplete: true,
+    };
+    setUser(updatedUser);
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedUser));
   };
 
   // Logout
@@ -256,7 +341,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   };
 
-  // Role Switcher
+  // Dev Role Switcher
   const switchRoleForDev = (role: UserRole) => {
     if (!user) {
       const newUser: AuthUser = {
@@ -266,6 +351,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         companyName: 'SIDIAL FERRAGENS',
         role,
         isMaster: role === 'master',
+        isProfileComplete: true,
         createdAt: new Date().toISOString(),
       };
       setUser(newUser);
@@ -277,6 +363,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ...user,
       role,
       isMaster: role === 'master',
+      isProfileComplete: true,
     };
     setUser(updated);
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated));
@@ -293,7 +380,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loginWithEmail,
         registerWithEmail,
         loginWithGoogle,
-        loginAsDemo,
+        completeOnboarding,
         logout,
         switchRoleForDev,
       }}

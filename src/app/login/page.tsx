@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import Link from 'next/link';
@@ -12,20 +12,34 @@ import {
   ShieldCheck,
   AlertCircle,
   Sparkles,
-  KeyRound,
   Eye,
   EyeOff,
 } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { loginWithEmail, loginWithGoogle, loginAsDemo } = useAuth();
+  const { loginWithEmail, loginWithGoogle } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [trialDays, setTrialDays] = useState(14);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const savedPricing = localStorage.getItem('dr_vale_master_pricing_v1');
+      if (savedPricing) {
+        const parsed = JSON.parse(savedPricing);
+        if (parsed.trialDurationDays && Number(parsed.trialDurationDays) > 0) {
+          setTrialDays(Number(parsed.trialDurationDays));
+        }
+      }
+    } catch {
+      // fallback
+    }
+  }, []);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +51,8 @@ export default function LoginPage() {
       if (res.success) {
         if (res.isMaster) {
           router.push('/admin/master');
+        } else if (!res.isProfileComplete) {
+          router.push('/onboarding');
         } else {
           router.push('/');
         }
@@ -58,6 +74,8 @@ export default function LoginPage() {
       if (res.success) {
         if (res.isMaster) {
           router.push('/admin/master');
+        } else if (!res.isProfileComplete) {
+          router.push('/onboarding');
         } else {
           router.push('/');
         }
@@ -69,11 +87,6 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleDemoAccess = () => {
-    loginAsDemo('EMPRESA DE TESTE');
-    router.push('/');
   };
 
   return (
@@ -94,7 +107,9 @@ export default function LoginPage() {
         <div className="rounded-2xl bg-white p-7 shadow-xl border border-slate-200 space-y-5">
           <div>
             <h2 className="text-base font-bold text-slate-900">Acesse sua Conta</h2>
-            <p className="text-xs text-slate-500">Entre para acessar a plataforma de cálculo ou administração</p>
+            <p className="text-xs text-slate-500">
+              Entre para acessar a plataforma ou realizar a configuração da sua empresa
+            </p>
           </div>
 
           {error && (
@@ -129,12 +144,14 @@ export default function LoginPage() {
                 d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
               />
             </svg>
-            <span>Continuar com Google (Gmail)</span>
+            <span>Entrar com Google (Gmail)</span>
           </button>
 
           <div className="relative flex items-center justify-center">
             <div className="w-full border-t border-slate-200"></div>
-            <span className="bg-white px-3 text-[11px] text-slate-400 uppercase font-medium">ou com e-mail</span>
+            <span className="bg-white px-3 text-[11px] text-slate-400 uppercase font-medium">
+              ou com e-mail e senha
+            </span>
           </div>
 
           {/* Email / Password Form */}
@@ -188,26 +205,18 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* 1-Click Free Trial for Leads / Clients */}
+          {/* Call To Action for New Trial Accounts */}
           <div className="pt-2 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={handleDemoAccess}
+            <Link
+              href="/cadastro"
               className="flex items-center justify-center gap-2 w-full rounded-xl bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 px-4 py-2.5 text-xs font-bold text-emerald-800 transition shadow-2xs"
             >
               <Sparkles className="h-4 w-4 text-emerald-600" />
-              <span>Experimentar Modo Demonstração (14 dias grátis)</span>
-            </button>
-            <p className="text-center text-[10px] text-slate-400 mt-1.5">
-              Acesso imediato para clientes testarem sem cadastro prévio
-            </p>
-          </div>
-
-          <div className="text-center text-xs text-slate-500 pt-1">
-            Não tem uma conta?{' '}
-            <Link href="/cadastro" className="font-semibold text-emerald-600 hover:underline">
-              Cadastre sua Empresa
+              <span>Novo por aqui? Teste grátis por {trialDays} dias</span>
             </Link>
+            <p className="text-center text-[10px] text-slate-400 mt-1.5">
+              Crie sua conta para liberar acesso aos cálculos
+            </p>
           </div>
         </div>
 

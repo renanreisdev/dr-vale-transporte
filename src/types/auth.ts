@@ -5,14 +5,16 @@ export interface AuthUser {
   email: string;
   name: string;
   avatarUrl?: string;
-  companyName: string;
+  companyName?: string;
   role: UserRole;
   isMaster: boolean;
+  isProfileComplete?: boolean;
+  emailVerified?: boolean;
   createdAt: string;
 }
 
 export interface AuthSession {
-  user: AuthUser | null;
+  user: AuthUser;
   token?: string;
-  isAuthenticated: boolean;
+  expiresAt: string;
 }

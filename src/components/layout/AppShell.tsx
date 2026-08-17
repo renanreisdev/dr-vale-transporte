@@ -15,21 +15,26 @@ function ShellContent({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
   const isPublicRoute = pathname === '/login' || pathname === '/cadastro';
+  const isOnboardingRoute = pathname === '/onboarding';
 
-  // Protect internal routes: redirect to /login if unauthenticated
+  // Protect internal routes & enforce onboarding
   useEffect(() => {
-    if (!isAuthLoading && !isAuthenticated && !isPublicRoute) {
-      router.replace('/login');
+    if (!isAuthLoading) {
+      if (!isAuthenticated && !isPublicRoute) {
+        router.replace('/login');
+      } else if (isAuthenticated && !user?.isMaster && !user?.isProfileComplete && !isOnboardingRoute && !isPublicRoute) {
+        router.replace('/onboarding');
+      }
     }
-  }, [isAuthenticated, isAuthLoading, isPublicRoute, router]);
+  }, [isAuthenticated, isAuthLoading, isPublicRoute, isOnboardingRoute, user, router]);
 
-  // If on public login or register pages, render directly without sidebar/header
-  if (isPublicRoute) {
+  // If on login, register, or onboarding pages, render directly without sidebar/header
+  if (isPublicRoute || isOnboardingRoute) {
     return <>{children}</>;
   }
 
   // Loading state
-  if (!isLoaded || isAuthLoading || !isAuthenticated) {
+  if (!isLoaded || isAuthLoading || !isAuthenticated || (!user?.isMaster && !user?.isProfileComplete)) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-slate-50">
         <div className="text-center space-y-3">
