@@ -68,11 +68,6 @@ export default function LoginPage() {
     router.push('/');
   };
 
-  const handleMasterQuickLogin = () => {
-    setEmail('renanreis.dev@gmail.com');
-    setPassword('master2026');
-  };
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-100 p-4 sm:p-6">
       <div className="w-full max-w-md space-y-6">
@@ -154,13 +149,6 @@ export default function LoginPage() {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-xs font-medium text-slate-700">Senha</label>
-                <button
-                  type="button"
-                  onClick={handleMasterQuickLogin}
-                  className="text-[11px] font-medium text-emerald-600 hover:text-emerald-700"
-                >
-                  Preencher Dono (Master)
-                </button>
               </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />

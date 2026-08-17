@@ -127,22 +127,22 @@ export default function Sidebar({ companyName = 'SIDIAL FERRAGENS', isLicensed =
           {isMaster && (
             <div className="pt-3 mt-3 border-t border-slate-800">
               <span className="px-3 text-[10px] font-bold tracking-wider uppercase text-indigo-400">
-                Acesso Proprietário
+                Painel Administrativo
               </span>
               <Link
-                href="/admin/licencas"
+                href="/admin/master"
                 className={`mt-1 flex items-center justify-between rounded-lg px-3 py-2.5 text-xs font-medium transition-all ${
-                  pathname === '/admin/licencas'
+                  pathname === '/admin/master' || pathname === '/admin/licencas'
                     ? 'bg-indigo-600 text-white shadow-sm font-semibold'
                     : 'text-indigo-200 hover:bg-slate-800 hover:text-white'
                 }`}
               >
                 <div className="flex items-center gap-2.5 truncate">
                   <ShieldAlert className="h-4 w-4 text-indigo-400 shrink-0" />
-                  <span className="font-semibold">Painel Master (Admin)</span>
+                  <span className="font-semibold">Central Master</span>
                 </div>
                 <span className="rounded bg-indigo-500/30 text-indigo-300 text-[9px] font-bold px-1.5 py-0.5 border border-indigo-400/40">
-                  MASTER
+                  DONO
                 </span>
               </Link>
             </div>

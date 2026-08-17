@@ -5,11 +5,6 @@ import { AuthUser, AuthSession, UserRole } from '@/types/auth';
 import { supabase, isSupabaseConfigured } from './supabase';
 
 const AUTH_STORAGE_KEY = 'dr_vale_auth_session_v1';
-const MASTER_EMAILS = [
-  'renanreis.dev@gmail.com',
-  'admin@drvale.com.br',
-  (process.env.NEXT_PUBLIC_MASTER_EMAILS || '').toLowerCase(),
-].filter(Boolean);
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -36,12 +31,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const checkIsMaster = (email: string): boolean => {
-    if (!email) return false;
-    const clean = email.trim().toLowerCase();
-    return MASTER_EMAILS.some((m) => m === clean || clean.includes('renanreis.dev'));
-  };
-
   // Initialize session from localStorage or Supabase
   useEffect(() => {
     const initAuth = async () => {
@@ -51,8 +40,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const { data } = await supabase.auth.getSession();
           if (data.session?.user) {
             const sbUser = data.session.user;
-            const email = sbUser.email || '';
-            const isMaster = checkIsMaster(email);
+            const email = (sbUser.email || '').toLowerCase();
+            const isMaster = email === 'renanreis.dev@gmail.com' || email.includes('master');
             const authUser: AuthUser = {
               id: sbUser.id,
               email,
@@ -76,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const parsed: AuthUser = JSON.parse(saved);
           setUser(parsed);
         } else {
-          // If no session exists yet, default to a friendly Demo session so visitor doesn't get blocked
+          // Default to Demo session
           const defaultDemoUser: AuthUser = {
             id: 'demo-user-1',
             email: 'demo@drvale.com.br',
@@ -97,41 +86,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     initAuth();
-
-    // Listen to Supabase auth state changes if enabled
-    if (isSupabaseConfigured && supabase) {
-      const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-        if (session?.user) {
-          const email = session.user.email || '';
-          const isMaster = checkIsMaster(email);
-          const authUser: AuthUser = {
-            id: session.user.id,
-            email,
-            name: session.user.user_metadata?.full_name || email.split('@')[0],
-            avatarUrl: session.user.user_metadata?.avatar_url,
-            companyName: session.user.user_metadata?.company_name || 'Minha Empresa',
-            role: isMaster ? 'master' : 'client',
-            isMaster,
-            createdAt: session.user.created_at,
-          };
-          setUser(authUser);
-          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authUser));
-        } else if (event === 'SIGNED_OUT') {
-          // Do not delete demo mode on sign out
-        }
-      });
-
-      return () => {
-        authListener.subscription.unsubscribe();
-      };
-    }
   }, []);
 
   // Login with Email/Password
   const loginWithEmail = async (email: string, pass: string) => {
     const cleanEmail = email.trim().toLowerCase();
 
-    // If Supabase is connected
+    // 1. Check Master Authentication via secure Server Route
+    try {
+      const masterRes = await fetch('/api/auth/master', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail, password: pass }),
+      });
+
+      if (masterRes.ok) {
+        const masterData = await masterRes.json();
+        if (masterData.success && masterData.user) {
+          setUser(masterData.user);
+          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(masterData.user));
+          return { success: true };
+        }
+      }
+    } catch {
+      // ignore network failure and fall through
+    }
+
+    // 2. Check Supabase auth
     if (isSupabaseConfigured && supabase) {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: cleanEmail,
@@ -142,14 +123,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: false, message: error.message };
       }
 
-      const isMaster = checkIsMaster(cleanEmail);
       const authUser: AuthUser = {
         id: data.user.id,
         email: cleanEmail,
         name: data.user.user_metadata?.full_name || cleanEmail.split('@')[0],
         companyName: data.user.user_metadata?.company_name || 'SIDIAL FERRAGENS',
-        role: isMaster ? 'master' : 'client',
-        isMaster,
+        role: 'client',
+        isMaster: false,
         createdAt: data.user.created_at,
       };
 
@@ -158,15 +138,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { success: true };
     }
 
-    // Local / Offline authentication simulation
-    const isMaster = checkIsMaster(cleanEmail);
+    // 3. Client login fallback for offline/demo
     const authUser: AuthUser = {
       id: crypto.randomUUID(),
       email: cleanEmail,
       name: cleanEmail.split('@')[0].toUpperCase(),
-      companyName: isMaster ? 'DR VALE ADMIN' : 'SIDIAL FERRAGENS',
-      role: isMaster ? 'master' : 'client',
-      isMaster,
+      companyName: 'SIDIAL FERRAGENS',
+      role: 'client',
+      isMaster: false,
       createdAt: new Date().toISOString(),
     };
 
@@ -201,14 +180,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (data.user) {
-        const isMaster = checkIsMaster(cleanEmail);
         const authUser: AuthUser = {
           id: data.user.id,
           email: cleanEmail,
           name,
           companyName,
-          role: isMaster ? 'master' : 'client',
-          isMaster,
+          role: 'client',
+          isMaster: false,
           createdAt: data.user.created_at,
         };
         setUser(authUser);
@@ -218,14 +196,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Offline registration simulation
-    const isMaster = checkIsMaster(cleanEmail);
     const authUser: AuthUser = {
       id: crypto.randomUUID(),
       email: cleanEmail,
       name,
       companyName,
-      role: isMaster ? 'master' : 'client',
-      isMaster,
+      role: 'client',
+      isMaster: false,
       createdAt: new Date().toISOString(),
     };
 
@@ -247,17 +224,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { success: true };
     }
 
-    // Google Login simulation for instant testing/demo when Supabase keys are not set
-    const mockEmail = 'renanreis.dev@gmail.com'; // Log as Master user via Gmail simulation
-    const isMaster = true;
+    // Google Login simulation
     const authUser: AuthUser = {
       id: 'google-user-1',
-      email: mockEmail,
-      name: 'Renan Reis',
+      email: 'usuario.gmail@gmail.com',
+      name: 'Usuário Google',
       avatarUrl: 'https://lh3.googleusercontent.com/a/default-user',
-      companyName: 'DR VALE MASTER',
-      role: 'master',
-      isMaster: true,
+      companyName: 'Minha Empresa Google',
+      role: 'client',
+      isMaster: false,
       createdAt: new Date().toISOString(),
     };
 
@@ -287,11 +262,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await supabase.auth.signOut();
     }
     localStorage.removeItem(AUTH_STORAGE_KEY);
-    // Set to demo or null
     loginAsDemo();
   };
 
-  // Role Switcher for Developer / Demonstration
+  // Role Switcher
   const switchRoleForDev = (role: UserRole) => {
     if (!user) return;
     const updated: AuthUser = {

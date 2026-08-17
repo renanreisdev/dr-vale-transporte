@@ -93,7 +93,7 @@ export default function Header({ period, companyName = 'SIDIAL FERRAGENS', onSav
                 <div className="mt-2 flex items-center gap-1.5">
                   {isMaster ? (
                     <span className="rounded bg-indigo-100 text-indigo-800 text-[10px] font-bold px-1.5 py-0.5 border border-indigo-200">
-                      MASTER / DONO DO SISTEMA
+                      DONO / MASTER DO SISTEMA
                     </span>
                   ) : isDemo ? (
                     <span className="rounded bg-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.5 border border-amber-200">
@@ -111,12 +111,12 @@ export default function Header({ period, companyName = 'SIDIAL FERRAGENS', onSav
                 <button
                   onClick={() => {
                     setIsUserMenuOpen(false);
-                    router.push('/admin/licencas');
+                    router.push('/admin/master');
                   }}
-                  className="flex items-center gap-2 w-full rounded-lg px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 transition"
+                  className="flex items-center gap-2 w-full rounded-lg px-3 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-50 transition"
                 >
                   <ShieldAlert className="h-3.5 w-3.5" />
-                  <span>Acessar Painel Master (Admin)</span>
+                  <span>Acessar Central Master (Dono)</span>
                 </button>
               )}
 
