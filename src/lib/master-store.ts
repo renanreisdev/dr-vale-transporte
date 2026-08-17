@@ -8,6 +8,7 @@ import {
   PlanPricingConfig,
   MasterMetrics,
   LicensePlanType,
+  LicenseStatusType,
 } from '@/types/master';
 import { generateLicenseKey } from './license-service';
 
@@ -161,7 +162,6 @@ export function useMasterStore() {
     }
   }, []);
 
-  // Save helpers
   const saveLicenses = (newLicenses: MasterLicense[]) => {
     setLicenses(newLicenses);
     localStorage.setItem(STORAGE_KEYS.LICENSES, JSON.stringify(newLicenses));
@@ -260,6 +260,76 @@ export function useMasterStore() {
     [licenses, clients]
   );
 
+  // Update Client and their Plan
+  const updateClientAndPlan = useCallback(
+    (
+      clientId: string,
+      updates: {
+        name?: string;
+        companyName?: string;
+        cnpj?: string;
+        phone?: string;
+        email?: string;
+        planType?: LicensePlanType;
+        licenseStatus?: LicenseStatusType;
+        expirationDate?: string;
+        price?: number;
+      }
+    ) => {
+      // Update client
+      const updatedClients = clients.map((c) => {
+        if (c.id === clientId) {
+          return {
+            ...c,
+            ...updates,
+            companyName: updates.companyName ? updates.companyName.toUpperCase() : c.companyName,
+          };
+        }
+        return c;
+      });
+      saveClients(updatedClients);
+
+      // Find matching client
+      const client = clients.find((c) => c.id === clientId);
+      if (client?.licenseKey) {
+        const updatedLicenses = licenses.map((lic) => {
+          if (lic.licenseKey === client.licenseKey || lic.clientEmail === client.email) {
+            return {
+              ...lic,
+              clientName: updates.companyName ? updates.companyName.toUpperCase() : lic.clientName,
+              clientTradeName: updates.companyName ? updates.companyName.toUpperCase() : lic.clientTradeName,
+              clientCnpj: updates.cnpj !== undefined ? updates.cnpj : lic.clientCnpj,
+              clientEmail: updates.email !== undefined ? updates.email : lic.clientEmail,
+              clientPhone: updates.phone !== undefined ? updates.phone : lic.clientPhone,
+              planType: updates.planType !== undefined ? updates.planType : lic.planType,
+              status: updates.licenseStatus !== undefined ? updates.licenseStatus : lic.status,
+              expirationDate: updates.expirationDate !== undefined ? updates.expirationDate : lic.expirationDate,
+              price: updates.price !== undefined ? updates.price : lic.price,
+              updatedAt: new Date().toISOString(),
+            };
+          }
+          return lic;
+        });
+        saveLicenses(updatedLicenses);
+      }
+
+      // Also update currently loaded company in localStorage if matching
+      try {
+        const currentCompanyRaw = localStorage.getItem('dr_vale_company_settings_v1');
+        if (currentCompanyRaw && updates.companyName) {
+          const comp = JSON.parse(currentCompanyRaw);
+          comp.name = updates.companyName.toUpperCase();
+          comp.tradeName = updates.companyName.toUpperCase();
+          if (updates.cnpj) comp.cnpj = updates.cnpj;
+          localStorage.setItem('dr_vale_company_settings_v1', JSON.stringify(comp));
+        }
+      } catch {
+        // ignore
+      }
+    },
+    [clients, licenses]
+  );
+
   // Extend License
   const extendLicense = useCallback(
     (id: string, additionalDays: number) => {
@@ -282,7 +352,7 @@ export function useMasterStore() {
     [licenses]
   );
 
-  // Toggle License Status (Active / Suspended)
+  // Toggle License Status
   const toggleLicenseStatus = useCallback(
     (id: string) => {
       const updated = licenses.map((lic) => {
@@ -371,6 +441,7 @@ export function useMasterStore() {
     metrics,
     isLoaded,
     addLicense,
+    updateClientAndPlan,
     extendLicense,
     toggleLicenseStatus,
     deleteLicense,

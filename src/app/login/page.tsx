@@ -35,7 +35,11 @@ export default function LoginPage() {
     try {
       const res = await loginWithEmail(email, password);
       if (res.success) {
-        router.push('/');
+        if (res.isMaster) {
+          router.push('/admin/master');
+        } else {
+          router.push('/');
+        }
       } else {
         setError(res.message || 'Credenciais inválidas. Verifique seu e-mail e senha.');
       }
@@ -52,7 +56,11 @@ export default function LoginPage() {
     try {
       const res = await loginWithGoogle();
       if (res.success) {
-        router.push('/');
+        if (res.isMaster) {
+          router.push('/admin/master');
+        } else {
+          router.push('/');
+        }
       } else {
         setError(res.message || 'Falha ao conectar com o Google.');
       }
@@ -86,7 +94,7 @@ export default function LoginPage() {
         <div className="rounded-2xl bg-white p-7 shadow-xl border border-slate-200 space-y-5">
           <div>
             <h2 className="text-base font-bold text-slate-900">Acesse sua Conta</h2>
-            <p className="text-xs text-slate-500">Entre para gerenciar cálculos, relatórios e colaboradores</p>
+            <p className="text-xs text-slate-500">Entre para acessar a plataforma de cálculo ou administração</p>
           </div>
 
           {error && (

@@ -12,15 +12,15 @@ interface AuthContextType {
   isMaster: boolean;
   isDemo: boolean;
   isLoading: boolean;
-  loginWithEmail: (email: string, pass: string) => Promise<{ success: boolean; message?: string }>;
+  loginWithEmail: (email: string, pass: string) => Promise<{ success: boolean; isMaster: boolean; message?: string }>;
   registerWithEmail: (
     email: string,
     pass: string,
     name: string,
     companyName: string
   ) => Promise<{ success: boolean; message?: string }>;
-  loginWithGoogle: () => Promise<{ success: boolean; message?: string }>;
-  loginAsDemo: (companyName?: string) => void;
+  loginWithGoogle: () => Promise<{ success: boolean; isMaster: boolean; message?: string }>;
+  loginAsDemo: (companyName?: string) => { success: boolean; isMaster: boolean };
   logout: () => void;
   switchRoleForDev: (role: UserRole) => void;
 }
@@ -65,18 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const parsed: AuthUser = JSON.parse(saved);
           setUser(parsed);
         } else {
-          // Default to Demo session
-          const defaultDemoUser: AuthUser = {
-            id: 'demo-user-1',
-            email: 'demo@drvale.com.br',
-            name: 'Visitante Demo',
-            companyName: 'SIDIAL FERRAGENS',
-            role: 'demo',
-            isMaster: false,
-            createdAt: new Date().toISOString(),
-          };
-          setUser(defaultDemoUser);
-          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(defaultDemoUser));
+          setUser(null);
         }
       } catch (err) {
         console.error('Error restoring auth session:', err);
@@ -105,11 +94,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (masterData.success && masterData.user) {
           setUser(masterData.user);
           localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(masterData.user));
-          return { success: true };
+          return { success: true, isMaster: true };
         }
       }
     } catch {
-      // ignore network failure and fall through
+      // fallback
     }
 
     // 2. Check Supabase auth
@@ -120,22 +109,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        return { success: false, message: error.message };
+        return { success: false, isMaster: false, message: error.message };
       }
 
+      const isMaster = cleanEmail === 'renanreis.dev@gmail.com';
       const authUser: AuthUser = {
         id: data.user.id,
         email: cleanEmail,
         name: data.user.user_metadata?.full_name || cleanEmail.split('@')[0],
         companyName: data.user.user_metadata?.company_name || 'SIDIAL FERRAGENS',
-        role: 'client',
-        isMaster: false,
+        role: isMaster ? 'master' : 'client',
+        isMaster,
         createdAt: data.user.created_at,
       };
 
       setUser(authUser);
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authUser));
-      return { success: true };
+      return { success: true, isMaster };
     }
 
     // 3. Client login fallback for offline/demo
@@ -151,7 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setUser(authUser);
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authUser));
-    return { success: true };
+    return { success: true, isMaster: false };
   };
 
   // Register with Email
@@ -220,8 +210,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/` : undefined,
         },
       });
-      if (error) return { success: false, message: error.message };
-      return { success: true };
+      if (error) return { success: false, isMaster: false, message: error.message };
+      return { success: true, isMaster: false };
     }
 
     // Google Login simulation
@@ -238,7 +228,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setUser(authUser);
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authUser));
-    return { success: true };
+    return { success: true, isMaster: false };
   };
 
   // Instant 1-Click Demo Login
@@ -254,6 +244,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
     setUser(demoUser);
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(demoUser));
+    return { success: true, isMaster: false };
   };
 
   // Logout
@@ -262,12 +253,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await supabase.auth.signOut();
     }
     localStorage.removeItem(AUTH_STORAGE_KEY);
-    loginAsDemo();
+    setUser(null);
   };
 
   // Role Switcher
   const switchRoleForDev = (role: UserRole) => {
-    if (!user) return;
+    if (!user) {
+      const newUser: AuthUser = {
+        id: 'dev-user',
+        email: role === 'master' ? 'renanreis.dev@gmail.com' : 'cliente@empresa.com.br',
+        name: role === 'master' ? 'Renan Reis (Master)' : 'Cliente',
+        companyName: 'SIDIAL FERRAGENS',
+        role,
+        isMaster: role === 'master',
+        createdAt: new Date().toISOString(),
+      };
+      setUser(newUser);
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser));
+      return;
+    }
+
     const updated: AuthUser = {
       ...user,
       role,
@@ -281,7 +286,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
-        isAuthenticated: !!user && user.role !== 'demo',
+        isAuthenticated: !!user,
         isMaster: !!user?.isMaster,
         isDemo: user?.role === 'demo',
         isLoading,

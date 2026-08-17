@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { usePathname } from 'next/navigation';
+import React, { useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import DemoBanner from './DemoBanner';
@@ -10,20 +10,31 @@ import { AuthProvider, useAuth } from '@/lib/auth-context';
 
 function ShellContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { period, company, license, refreshLicense, isLoaded } = useVTStore();
-  const { isLoading: isAuthLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
-  // If on login or register pages, render directly without sidebar/header
-  if (pathname === '/login' || pathname === '/cadastro') {
+  const isPublicRoute = pathname === '/login' || pathname === '/cadastro';
+
+  // Protect internal routes: redirect to /login if unauthenticated
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated && !isPublicRoute) {
+      router.replace('/login');
+    }
+  }, [isAuthenticated, isAuthLoading, isPublicRoute, router]);
+
+  // If on public login or register pages, render directly without sidebar/header
+  if (isPublicRoute) {
     return <>{children}</>;
   }
 
-  if (!isLoaded || isAuthLoading) {
+  // Loading state
+  if (!isLoaded || isAuthLoading || !isAuthenticated) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-slate-50">
         <div className="text-center space-y-3">
           <div className="h-8 w-8 animate-spin rounded-full border-3 border-emerald-600 border-t-transparent mx-auto"></div>
-          <p className="text-xs font-medium text-slate-500">Carregando DR VALE...</p>
+          <p className="text-xs font-medium text-slate-500">Autenticando no DR VALE...</p>
         </div>
       </div>
     );

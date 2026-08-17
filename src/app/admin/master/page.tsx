@@ -30,6 +30,7 @@ export default function MasterDashboardPage() {
     pricingConfig,
     metrics,
     addLicense,
+    updateClientAndPlan,
     extendLicense,
     toggleLicenseStatus,
     deleteLicense,
@@ -211,7 +212,12 @@ export default function MasterDashboardPage() {
         />
       )}
 
-      {activeTab === 'clients' && <MasterUserManager clients={clients} />}
+      {activeTab === 'clients' && (
+        <MasterUserManager
+          clients={clients}
+          onUpdateClientAndPlan={updateClientAndPlan}
+        />
+      )}
 
       {activeTab === 'admins' && (
         <MasterAdminTeam
