@@ -44,7 +44,7 @@ export default function RecuperarSenhaPage() {
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl bg-white p-7 shadow-xl border border-slate-200 space-y-5">
+        <div className="rounded-2xl bg-white p-7 sm:p-8 shadow-xl border border-slate-200 space-y-5">
           {isSuccess ? (
             <div className="space-y-4 text-center py-3">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
@@ -86,15 +86,15 @@ export default function RecuperarSenhaPage() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">E-mail Cadastrado</label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">E-mail Cadastrado</label>
+                  <div className="relative flex items-center">
+                    <Mail className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-400" />
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="seuemail@empresa.com.br"
-                      className="w-full rounded-xl border border-slate-300 pl-9.5 pr-3 py-2.5 text-xs font-medium text-slate-900 focus:border-emerald-600 focus:outline-none"
+                      className="w-full rounded-xl border border-slate-300 bg-white pl-11 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/10 focus:outline-none transition-all"
                       required
                     />
                   </div>
@@ -103,7 +103,7 @@ export default function RecuperarSenhaPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="flex items-center justify-center gap-2 w-full rounded-xl bg-slate-900 hover:bg-slate-800 px-4 py-2.5 text-xs font-semibold text-white transition shadow-sm disabled:opacity-50"
+                  className="flex items-center justify-center gap-2 w-full rounded-xl bg-slate-900 hover:bg-slate-800 px-4 py-2.5 text-xs font-semibold text-white transition shadow-sm disabled:opacity-50 cursor-pointer"
                 >
                   <span>{isLoading ? 'Enviando Link...' : 'Enviar Link de Recuperação'}</span>
                   <ArrowRight className="h-3.5 w-3.5" />

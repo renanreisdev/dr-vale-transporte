@@ -112,7 +112,7 @@ export default function OnboardingPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Razão Social */}
               <div className="sm:col-span-2">
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   Razão Social da Empresa *
                 </label>
                 <input
@@ -120,14 +120,14 @@ export default function OnboardingPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Ex: SILVA & SOUZA COMÉRCIO DE ALIMENTOS LTDA"
-                  className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs font-bold uppercase text-slate-900 focus:border-emerald-600 focus:outline-none"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold uppercase text-slate-900 placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/10 focus:outline-none transition-all"
                   required
                 />
               </div>
 
               {/* Nome Fantasia */}
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   Nome Fantasia (Exibição) *
                 </label>
                 <input
@@ -135,14 +135,14 @@ export default function OnboardingPage() {
                   value={tradeName}
                   onChange={(e) => setTradeName(e.target.value)}
                   placeholder="Ex: MERCADO CENTRAL"
-                  className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs font-bold uppercase text-slate-900 focus:border-emerald-600 focus:outline-none"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold uppercase text-slate-900 placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/10 focus:outline-none transition-all"
                   required
                 />
               </div>
 
               {/* CNPJ */}
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   CNPJ da Empresa *
                 </label>
                 <input
@@ -150,24 +150,24 @@ export default function OnboardingPage() {
                   value={cnpj}
                   onChange={(e) => setCnpj(e.target.value)}
                   placeholder="00.000.000/0001-00"
-                  className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs font-mono font-bold text-slate-900 focus:border-emerald-600 focus:outline-none"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-mono font-bold text-slate-900 placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/10 focus:outline-none transition-all"
                   required
                 />
               </div>
 
               {/* WhatsApp / Telefone */}
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   WhatsApp / Telefone de Contato *
                 </label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <div className="relative flex items-center">
+                  <Phone className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-400" />
                   <input
                     type="text"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="(53) 99999-9999"
-                    className="w-full rounded-xl border border-slate-300 pl-9.5 pr-3 py-2.5 text-xs font-medium text-slate-900 focus:border-emerald-600 focus:outline-none"
+                    className="w-full rounded-xl border border-slate-300 bg-white pl-11 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/10 focus:outline-none transition-all"
                     required
                   />
                 </div>
@@ -176,28 +176,28 @@ export default function OnboardingPage() {
               {/* Cidade / UF */}
               <div className="grid grid-cols-3 gap-2">
                 <div className="col-span-2">
-                  <label className="block text-xs font-medium text-slate-700 mb-1">Cidade *</label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">Cidade *</label>
+                  <div className="relative flex items-center">
+                    <MapPin className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-400" />
                     <input
                       type="text"
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
                       placeholder="Pelotas"
-                      className="w-full rounded-xl border border-slate-300 pl-9.5 pr-3 py-2.5 text-xs font-medium text-slate-900 focus:border-emerald-600 focus:outline-none"
+                      className="w-full rounded-xl border border-slate-300 bg-white pl-11 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/10 focus:outline-none transition-all"
                       required
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">UF *</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">UF *</label>
                   <input
                     type="text"
                     maxLength={2}
                     value={state}
                     onChange={(e) => setState(e.target.value.toUpperCase())}
                     placeholder="RS"
-                    className="w-full rounded-xl border border-slate-300 px-2 py-2.5 text-xs uppercase font-bold text-center text-slate-900 focus:border-emerald-600 focus:outline-none"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm uppercase font-bold text-center text-slate-900 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/10 focus:outline-none transition-all"
                     required
                   />
                 </div>
@@ -205,17 +205,17 @@ export default function OnboardingPage() {
 
               {/* Responsável RH */}
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   Nome do Responsável pelo RH / DP *
                 </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <div className="relative flex items-center">
+                  <User className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-400" />
                   <input
                     type="text"
                     value={responsibleName}
                     onChange={(e) => setResponsibleName(e.target.value)}
                     placeholder="Ex: Maria Fernandes"
-                    className="w-full rounded-xl border border-slate-300 pl-9.5 pr-3 py-2.5 text-xs font-medium text-slate-900 focus:border-emerald-600 focus:outline-none"
+                    className="w-full rounded-xl border border-slate-300 bg-white pl-11 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/10 focus:outline-none transition-all"
                     required
                   />
                 </div>
@@ -223,7 +223,7 @@ export default function OnboardingPage() {
 
               {/* Cargo */}
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   Cargo do Responsável
                 </label>
                 <input
@@ -231,14 +231,14 @@ export default function OnboardingPage() {
                   value={responsibleRole}
                   onChange={(e) => setResponsibleRole(e.target.value)}
                   placeholder="Ex: Analista de Recursos Humanos"
-                  className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs font-medium text-slate-900 focus:border-emerald-600 focus:outline-none"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/10 focus:outline-none transition-all"
                 />
               </div>
             </div>
 
             {/* Legal Lock Notice */}
             <div className="rounded-xl bg-amber-50 p-4 border border-amber-200 flex items-start gap-3 text-xs text-amber-900">
-              <Lock className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+              <Lock className="h-4.5 w-4.5 text-amber-600 shrink-0 mt-0.5" />
               <div className="space-y-0.5">
                 <span className="font-bold">Aviso de Bloqueio Fiscal e Emissão de Licença:</span>
                 <p className="text-[11px] text-amber-800 leading-relaxed">
@@ -252,7 +252,7 @@ export default function OnboardingPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex items-center justify-center gap-2.5 w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 px-5 py-3 text-xs font-bold text-white shadow-md transition disabled:opacity-50"
+              className="flex items-center justify-center gap-2.5 w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 px-5 py-3 text-xs font-bold text-white shadow-md transition disabled:opacity-50 cursor-pointer"
             >
               <Sparkles className="h-4 w-4" />
               <span>

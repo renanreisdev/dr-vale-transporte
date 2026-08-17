@@ -106,7 +106,6 @@ export default function MasterLicenseManager({
       notes,
     });
 
-    // Reset
     setClientName('');
     setClientTradeName('');
     setClientCnpj('');
@@ -135,21 +134,21 @@ export default function MasterLicenseManager({
       {/* Toolbar */}
       <div className="p-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-white">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+          <div className="relative flex items-center">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Buscar cliente, CNPJ ou chave..."
-              className="h-8.5 rounded-lg border border-slate-300 pl-8.5 pr-3 text-xs focus:border-indigo-600 focus:outline-none w-64"
+              className="h-9 rounded-xl border border-slate-300 bg-white pl-10 pr-4 text-xs text-slate-900 placeholder:text-slate-400 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/10 focus:outline-none w-72 transition-all"
             />
           </div>
 
           <select
             value={filterPlan}
             onChange={(e) => setFilterPlan(e.target.value)}
-            className="h-8.5 rounded-lg border border-slate-300 px-3 text-xs text-slate-700 focus:border-indigo-600 focus:outline-none bg-white"
+            className="h-9 rounded-xl border border-slate-300 px-3 text-xs text-slate-700 focus:border-indigo-600 focus:outline-none bg-white cursor-pointer"
           >
             <option value="ALL">Todos os Planos</option>
             <option value="monthly">Mensal</option>
@@ -161,7 +160,7 @@ export default function MasterLicenseManager({
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="h-8.5 rounded-lg border border-slate-300 px-3 text-xs text-slate-700 focus:border-indigo-600 focus:outline-none bg-white"
+            className="h-9 rounded-xl border border-slate-300 px-3 text-xs text-slate-700 focus:border-indigo-600 focus:outline-none bg-white cursor-pointer"
           >
             <option value="ALL">Todos os Status</option>
             <option value="active">Ativas</option>
@@ -172,7 +171,7 @@ export default function MasterLicenseManager({
 
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-xs font-semibold text-white transition shadow-xs"
+          className="flex items-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-xs font-semibold text-white transition shadow-xs cursor-pointer"
         >
           <Plus className="h-4 w-4" />
           <span>Criar / Emitir Nova Licença</span>
@@ -208,7 +207,6 @@ export default function MasterLicenseManager({
 
                 return (
                   <tr key={lic.id} className="hover:bg-slate-50 transition-colors">
-                    {/* Client */}
                     <td className="py-3 px-4">
                       <p className="font-bold text-slate-900 uppercase">{lic.clientTradeName || lic.clientName}</p>
                       <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
@@ -217,7 +215,6 @@ export default function MasterLicenseManager({
                       </div>
                     </td>
 
-                    {/* Plan */}
                     <td className="py-3 px-3 text-center">
                       <span
                         className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
@@ -234,12 +231,10 @@ export default function MasterLicenseManager({
                       </span>
                     </td>
 
-                    {/* Price */}
                     <td className="py-3 px-3 text-right font-bold text-slate-900">
                       {lic.price > 0 ? formatCurrencyBRL(lic.price) : 'Gratuito (Trial)'}
                     </td>
 
-                    {/* Expiration */}
                     <td className="py-3 px-3 text-center">
                       {lic.planType === 'lifetime' ? (
                         <span className="font-semibold text-purple-700">Vitalício</span>
@@ -255,7 +250,6 @@ export default function MasterLicenseManager({
                       )}
                     </td>
 
-                    {/* Status */}
                     <td className="py-3 px-3 text-center">
                       <span
                         className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
@@ -270,15 +264,14 @@ export default function MasterLicenseManager({
                       </span>
                     </td>
 
-                    {/* License Key & Copy */}
                     <td className="py-3 px-4 font-mono">
-                      <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded border border-slate-200">
+                      <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-lg border border-slate-200">
                         <span className="text-[11px] font-bold text-slate-800 truncate max-w-[180px]">
                           {lic.licenseKey}
                         </span>
                         <button
                           onClick={() => handleCopyKey(lic.licenseKey, lic.id)}
-                          className="rounded p-1 text-slate-500 hover:bg-slate-200 transition shrink-0"
+                          className="rounded p-1 text-slate-500 hover:bg-slate-200 transition shrink-0 cursor-pointer"
                           title="Copiar serial"
                         >
                           {copiedId === lic.id ? (
@@ -290,46 +283,41 @@ export default function MasterLicenseManager({
                       </div>
                     </td>
 
-                    {/* Actions */}
                     <td className="py-3 px-4 text-center">
                       <div className="flex items-center justify-center gap-1">
-                        {/* Send via WhatsApp */}
                         <a
                           href={getWhatsAppMessageUrl(lic)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="rounded p-1 text-emerald-600 hover:bg-emerald-50 transition"
+                          className="rounded-lg p-1.5 text-emerald-600 hover:bg-emerald-50 transition cursor-pointer"
                           title="Enviar Serial via WhatsApp para o Cliente"
                         >
                           <MessageSquare className="h-4 w-4" />
                         </a>
 
-                        {/* Extend +30 days */}
                         <button
                           onClick={() => onExtendLicense(lic.id, 30)}
-                          className="rounded px-1.5 py-0.5 text-[10px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition border border-indigo-200"
+                          className="rounded-lg px-2 py-1 text-[10px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition border border-indigo-200 cursor-pointer"
                           title="Prorrogar +30 dias"
                         >
                           +30d
                         </button>
 
-                        {/* Toggle Suspend */}
                         <button
                           onClick={() => onToggleStatus(lic.id)}
-                          className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+                          className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition cursor-pointer"
                           title={lic.status === 'active' ? 'Suspender Licença' : 'Reativar Licença'}
                         >
                           <ShieldAlert className="h-4 w-4" />
                         </button>
 
-                        {/* Delete */}
                         <button
                           onClick={() => {
                             if (confirm(`Excluir licença de ${lic.clientName}?`)) {
                               onDeleteLicense(lic.id);
                             }
                           }}
-                          className="rounded p-1 text-slate-400 hover:bg-rose-100 hover:text-rose-600 transition"
+                          className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-100 hover:text-rose-600 transition cursor-pointer"
                           title="Excluir"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -350,7 +338,7 @@ export default function MasterLicenseManager({
           <div className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setIsModalOpen(false)}
-              className="absolute right-4 top-4 rounded-lg p-1 text-slate-400 hover:bg-slate-100"
+              className="absolute right-4 top-4 rounded-lg p-1 text-slate-400 hover:bg-slate-100 cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
@@ -368,58 +356,58 @@ export default function MasterLicenseManager({
             <form onSubmit={handleSubmit} className="space-y-3.5">
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
-                  <label className="block text-xs font-medium text-slate-700 mb-1">Razão Social / Nome do Cliente *</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Razão Social / Nome do Cliente *</label>
                   <input
                     type="text"
                     value={clientName}
                     onChange={(e) => setClientName(e.target.value)}
                     placeholder="Ex: PADARIA CENTRAL LTDA"
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium uppercase focus:border-indigo-600 focus:outline-none"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold uppercase focus:border-indigo-600 focus:outline-none"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">Nome Fantasia (Opcional)</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Nome Fantasia (Opcional)</label>
                   <input
                     type="text"
                     value={clientTradeName}
                     onChange={(e) => setClientTradeName(e.target.value)}
                     placeholder="Ex: PADARIA CENTRAL"
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium uppercase focus:border-indigo-600 focus:outline-none"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold uppercase focus:border-indigo-600 focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">CNPJ (Opcional)</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">CNPJ (Opcional)</label>
                   <input
                     type="text"
                     value={clientCnpj}
                     onChange={(e) => setClientCnpj(e.target.value)}
                     placeholder="00.000.000/0001-00"
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs font-mono focus:border-indigo-600 focus:outline-none"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-mono focus:border-indigo-600 focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">WhatsApp / Telefone</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">WhatsApp / Telefone</label>
                   <input
                     type="text"
                     value={clientPhone}
                     onChange={(e) => setClientPhone(e.target.value)}
                     placeholder="(53) 99999-9999"
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs focus:border-indigo-600 focus:outline-none"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs focus:border-indigo-600 focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">E-mail do Cliente</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">E-mail do Cliente</label>
                   <input
                     type="email"
                     value={clientEmail}
                     onChange={(e) => setClientEmail(e.target.value)}
                     placeholder="contato@padariacentral.com"
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs focus:border-indigo-600 focus:outline-none"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs focus:border-indigo-600 focus:outline-none"
                   />
                 </div>
               </div>
@@ -428,11 +416,11 @@ export default function MasterLicenseManager({
               <div className="rounded-xl bg-slate-50 p-3.5 border border-slate-200 space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">Tipo de Plano</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Tipo de Plano</label>
                     <select
                       value={planType}
                       onChange={(e) => handlePlanTypeChange(e.target.value as LicensePlanType)}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold focus:border-indigo-600 focus:outline-none bg-white"
+                      className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold focus:border-indigo-600 focus:outline-none bg-white cursor-pointer"
                     >
                       <option value="trial">Trial / Demonstração (14 dias)</option>
                       <option value="monthly">Mensal (30 dias)</option>
@@ -443,19 +431,19 @@ export default function MasterLicenseManager({
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">Valor Cobrado (R$)</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Valor Cobrado (R$)</label>
                     <input
                       type="number"
                       step="0.01"
                       value={price}
                       onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs font-bold text-emerald-700 focus:border-indigo-600 focus:outline-none bg-white"
+                      className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs font-bold text-emerald-700 focus:border-indigo-600 focus:outline-none bg-white"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Duração da Licença em Dias
                   </label>
                   <input
@@ -463,19 +451,19 @@ export default function MasterLicenseManager({
                     value={customDays}
                     disabled={planType === 'lifetime'}
                     onChange={(e) => setCustomDays(parseInt(e.target.value, 10) || 30)}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium focus:border-indigo-600 focus:outline-none disabled:bg-slate-200"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium focus:border-indigo-600 focus:outline-none disabled:bg-slate-200"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Observações Internas (Opcional)</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Observações Internas (Opcional)</label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Ex: Pagamento recebido via PIX em 16/08"
                   rows={2}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs focus:border-indigo-600 focus:outline-none"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs focus:border-indigo-600 focus:outline-none"
                 />
               </div>
 
@@ -483,13 +471,13 @@ export default function MasterLicenseManager({
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="rounded-lg px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100"
+                  className="rounded-lg px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex items-center gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 px-5 py-2 text-xs font-bold text-white shadow-xs"
+                  className="flex items-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 px-5 py-2.5 text-xs font-bold text-white shadow-xs cursor-pointer"
                 >
                   <Sparkles className="h-3.5 w-3.5" />
                   Gerar Licença e Serial

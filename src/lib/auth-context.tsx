@@ -239,20 +239,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { success: true, requiresEmailVerification: false };
   };
 
-  // 1-Click Fast Login / Signup with Google (Gmail)
+  // 1-Click Fast Login / Signup with Google OAuth (Gmail)
   const loginWithGoogle = async () => {
     if (isSupabaseConfigured && supabase) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/` : undefined,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
       if (error) return { success: false, isMaster: false, isProfileComplete: false, message: error.message };
       return { success: true, isMaster: false, isProfileComplete: false };
     }
 
-    // Direct Google authentication simulation
+    // Direct Google authentication simulation when Supabase keys are not yet provided locally
     const savedRaw = localStorage.getItem(AUTH_STORAGE_KEY);
     const savedParsed = savedRaw ? JSON.parse(savedRaw) : null;
     const isProfileComplete = savedParsed ? !!savedParsed.isProfileComplete : false;
@@ -308,7 +312,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { success: true };
   };
 
-  // Complete First Login Onboarding (Company Setup + Dynamic Trial Duration from Master Pricing)
+  // Complete First Login Onboarding
   const completeOnboarding = (companyData: CompanyOnboardingData) => {
     if (!user) return;
 
