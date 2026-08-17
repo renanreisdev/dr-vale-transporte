@@ -32,6 +32,8 @@ interface AuthContextType {
     name: string
   ) => Promise<{ success: boolean; requiresEmailVerification?: boolean; message?: string }>;
   loginWithGoogle: () => Promise<{ success: boolean; isMaster: boolean; isProfileComplete: boolean; message?: string }>;
+  sendPasswordReset: (email: string) => Promise<{ success: boolean; message?: string }>;
+  updatePassword: (newPass: string) => Promise<{ success: boolean; message?: string }>;
   completeOnboarding: (companyData: CompanyOnboardingData) => void;
   logout: () => void;
   switchRoleForDev: (role: UserRole) => void;
@@ -55,7 +57,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const email = (sbUser.email || '').toLowerCase();
             const isMaster = email === 'renanreis.dev@gmail.com' || email.includes('master');
             
-            // Check if user has already completed onboarding
             const savedRaw = localStorage.getItem(AUTH_STORAGE_KEY);
             const savedParsed = savedRaw ? JSON.parse(savedRaw) : null;
             const isProfileComplete = isMaster || (savedParsed ? !!savedParsed.isProfileComplete : false);
@@ -220,7 +221,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { success: true, requiresEmailVerification: true };
     }
 
-    // Offline registration simulation
+    // Offline registration
     const authUser: AuthUser = {
       id: crypto.randomUUID(),
       email: cleanEmail,
@@ -238,7 +239,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { success: true, requiresEmailVerification: false };
   };
 
-  // Login with Google / Gmail
+  // 1-Click Fast Login / Signup with Google (Gmail)
   const loginWithGoogle = async () => {
     if (isSupabaseConfigured && supabase) {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -251,7 +252,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { success: true, isMaster: false, isProfileComplete: false };
     }
 
-    // Google Login simulation
+    // Direct Google authentication simulation
     const savedRaw = localStorage.getItem(AUTH_STORAGE_KEY);
     const savedParsed = savedRaw ? JSON.parse(savedRaw) : null;
     const isProfileComplete = savedParsed ? !!savedParsed.isProfileComplete : false;
@@ -274,11 +275,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { success: true, isMaster: false, isProfileComplete };
   };
 
+  // Send Password Reset Link to Email
+  const sendPasswordReset = async (email: string) => {
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/redefinir-senha` : undefined,
+      });
+      if (error) {
+        return { success: false, message: error.message };
+      }
+      return { success: true };
+    }
+
+    // Offline simulation
+    return { success: true, message: 'Link de redefinição de senha enviado para seu e-mail!' };
+  };
+
+  // Update / Reset Password
+  const updatePassword = async (newPass: string) => {
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.auth.updateUser({
+        password: newPass,
+      });
+      if (error) {
+        return { success: false, message: error.message };
+      }
+      return { success: true };
+    }
+
+    return { success: true };
+  };
+
   // Complete First Login Onboarding (Company Setup + Dynamic Trial Duration from Master Pricing)
   const completeOnboarding = (companyData: CompanyOnboardingData) => {
     if (!user) return;
 
-    // 1. Get trial duration from Master Pricing configuration
     let trialDays = 14;
     try {
       const savedPricing = localStorage.getItem(MASTER_PRICING_KEY);
@@ -292,7 +325,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Error reading master pricing:', e);
     }
 
-    // 2. Generate trial license based on Master duration
     const expDate = new Date(Date.now() + trialDays * 86400000);
     const expDateStr = expDate.toISOString().slice(0, 10);
     const generatedKey = generateLicenseKey('T30', companyData.name, expDateStr);
@@ -309,7 +341,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       activatedAt: new Date().toISOString(),
     };
 
-    // 3. Save company & license in localStorage
     localStorage.setItem('dr_vale_company_settings_v1', JSON.stringify({
       name: companyData.name.toUpperCase(),
       tradeName: companyData.tradeName.toUpperCase(),
@@ -322,7 +353,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }));
     localStorage.setItem('dr_vale_license_v1', JSON.stringify(trialLicense));
 
-    // 4. Update Auth User
     const updatedUser: AuthUser = {
       ...user,
       companyName: companyData.name.toUpperCase(),
@@ -380,6 +410,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loginWithEmail,
         registerWithEmail,
         loginWithGoogle,
+        sendPasswordReset,
+        updatePassword,
         completeOnboarding,
         logout,
         switchRoleForDev,

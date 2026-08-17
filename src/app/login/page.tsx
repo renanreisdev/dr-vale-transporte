@@ -25,6 +25,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [trialDays, setTrialDays] = useState(14);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -57,7 +58,7 @@ export default function LoginPage() {
           router.push('/');
         }
       } else {
-        setError(res.message || 'Credenciais inválidas. Verifique seu e-mail e senha.');
+        setError(res.message || 'E-mail ou senha incorretos. Verifique seus dados.');
       }
     } catch (err: any) {
       setError(err.message || 'Erro ao realizar login.');
@@ -68,7 +69,7 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     setError(null);
-    setIsLoading(true);
+    setIsGoogleLoading(true);
     try {
       const res = await loginWithGoogle();
       if (res.success) {
@@ -80,12 +81,12 @@ export default function LoginPage() {
           router.push('/');
         }
       } else {
-        setError(res.message || 'Falha ao conectar com o Google.');
+        setError(res.message || 'Falha ao autenticar com o Google.');
       }
     } catch (err: any) {
       setError(err.message || 'Erro no login com Google.');
     } finally {
-      setIsLoading(false);
+      setIsGoogleLoading(false);
     }
   };
 
@@ -104,11 +105,11 @@ export default function LoginPage() {
         </div>
 
         {/* Login Box */}
-        <div className="rounded-2xl bg-white p-7 shadow-xl border border-slate-200 space-y-5">
+        <div className="rounded-2xl bg-white p-7 sm:p-8 shadow-xl border border-slate-200 space-y-5">
           <div>
             <h2 className="text-base font-bold text-slate-900">Acesse sua Conta</h2>
             <p className="text-xs text-slate-500">
-              Entre para acessar a plataforma ou realizar a configuração da sua empresa
+              Entre para gerenciar seus cálculos ou acessar a administração
             </p>
           </div>
 
@@ -119,14 +120,14 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Google Login Button */}
+          {/* 1-Click Fast Google Login */}
           <button
             type="button"
             onClick={handleGoogleLogin}
-            disabled={isLoading}
+            disabled={isGoogleLoading || isLoading}
             className="flex items-center justify-center gap-3 w-full rounded-xl border border-slate-300 bg-white hover:bg-slate-50 px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-2xs transition disabled:opacity-50"
           >
-            <svg className="h-4 w-4" viewBox="0 0 24 24">
+            <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
               <path
                 fill="#4285F4"
                 d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
@@ -144,7 +145,7 @@ export default function LoginPage() {
                 d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
               />
             </svg>
-            <span>Entrar com Google (Gmail)</span>
+            <span>{isGoogleLoading ? 'Conectando ao Google...' : 'Entrar com Google (Gmail)'}</span>
           </button>
 
           <div className="relative flex items-center justify-center">
@@ -174,6 +175,12 @@ export default function LoginPage() {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-xs font-medium text-slate-700">Senha</label>
+                <Link
+                  href="/recuperar-senha"
+                  className="text-[11px] font-semibold text-emerald-600 hover:text-emerald-700 hover:underline"
+                >
+                  Esqueceu a senha?
+                </Link>
               </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -197,7 +204,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || isGoogleLoading}
               className="flex items-center justify-center gap-2 w-full rounded-xl bg-slate-900 hover:bg-slate-800 px-4 py-2.5 text-xs font-semibold text-white transition shadow-sm disabled:opacity-50"
             >
               <span>{isLoading ? 'Entrando...' : 'Entrar no Sistema'}</span>
@@ -205,18 +212,15 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Call To Action for New Trial Accounts */}
+          {/* CTA for New Trial Accounts */}
           <div className="pt-2 border-t border-slate-100">
             <Link
               href="/cadastro"
               className="flex items-center justify-center gap-2 w-full rounded-xl bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 px-4 py-2.5 text-xs font-bold text-emerald-800 transition shadow-2xs"
             >
               <Sparkles className="h-4 w-4 text-emerald-600" />
-              <span>Novo por aqui? Teste grátis por {trialDays} dias</span>
+              <span>Novo por aqui? Crie sua conta e teste por {trialDays} dias</span>
             </Link>
-            <p className="text-center text-[10px] text-slate-400 mt-1.5">
-              Crie sua conta para liberar acesso aos cálculos
-            </p>
           </div>
         </div>
 

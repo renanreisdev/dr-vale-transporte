@@ -14,7 +14,12 @@ function ShellContent({ children }: { children: React.ReactNode }) {
   const { period, company, license, refreshLicense, isLoaded } = useVTStore();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
-  const isPublicRoute = pathname === '/login' || pathname === '/cadastro';
+  const isPublicRoute =
+    pathname === '/login' ||
+    pathname === '/cadastro' ||
+    pathname === '/recuperar-senha' ||
+    pathname === '/redefinir-senha';
+
   const isOnboardingRoute = pathname === '/onboarding';
 
   // Protect internal routes & enforce onboarding
@@ -28,7 +33,7 @@ function ShellContent({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated, isAuthLoading, isPublicRoute, isOnboardingRoute, user, router]);
 
-  // If on login, register, or onboarding pages, render directly without sidebar/header
+  // If on public or onboarding pages, render directly without sidebar/header
   if (isPublicRoute || isOnboardingRoute) {
     return <>{children}</>;
   }

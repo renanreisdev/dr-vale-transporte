@@ -7,12 +7,12 @@ import {
   ShieldCheck,
   UserPlus,
   Trash2,
-  Lock,
   Mail,
   User,
   X,
   Sparkles,
   CheckCircle2,
+  Send,
 } from 'lucide-react';
 
 interface MasterAdminTeamProps {
@@ -29,7 +29,6 @@ export default function MasterAdminTeam({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const handleCreateMaster = (e: React.FormEvent) => {
@@ -37,13 +36,14 @@ export default function MasterAdminTeam({
     if (!name.trim() || !email.trim()) return;
 
     onAddMasterAdmin(name, email);
-    setSuccessMsg(`Novo Administrador Master "${name}" adicionado com sucesso!`);
+    setSuccessMsg(
+      `Convite enviado com sucesso para ${email}! O novo Administrador Master receberá o link por e-mail para definir sua senha de acesso.`
+    );
 
     setName('');
     setEmail('');
-    setPassword('');
     setIsModalOpen(false);
-    setTimeout(() => setSuccessMsg(null), 4000);
+    setTimeout(() => setSuccessMsg(null), 6000);
   };
 
   return (
@@ -67,7 +67,7 @@ export default function MasterAdminTeam({
             className="flex items-center gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-xs font-semibold text-white transition shadow-xs"
           >
             <UserPlus className="h-4 w-4" />
-            <span>Cadastrar Novo Master</span>
+            <span>Cadastrar Novo Master (Convite por E-mail)</span>
           </button>
         </div>
 
@@ -132,7 +132,7 @@ export default function MasterAdminTeam({
         </div>
       </div>
 
-      {/* Modal to Register New Master */}
+      {/* Modal to Register New Master via Email Invitation */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in">
           <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-200">
@@ -148,21 +148,23 @@ export default function MasterAdminTeam({
                 <UserPlus className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900">Cadastrar Novo Usuário Master</h3>
-                <p className="text-xs text-slate-500">Conceda privilégios de dono/administrador para um novo sócio</p>
+                <h3 className="text-base font-bold text-slate-900">Convidar Novo Administrador Master</h3>
+                <p className="text-xs text-slate-500">
+                  O novo usuário receberá um e-mail oficial para definir sua própria senha
+                </p>
               </div>
             </div>
 
-            <form onSubmit={handleCreateMaster} className="space-y-3.5">
+            <form onSubmit={handleCreateMaster} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Nome Completo</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Nome Completo do Master</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Ex: Ana Paula Reis"
+                    placeholder="Ex: Carlos Eduardo Silveira"
                     className="w-full rounded-xl border border-slate-300 pl-9.5 pr-3 py-2 text-xs font-medium focus:border-indigo-600 focus:outline-none"
                     required
                   />
@@ -170,7 +172,7 @@ export default function MasterAdminTeam({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">E-mail do Administrador</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1">E-mail Corporativo</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <input
@@ -184,25 +186,15 @@ export default function MasterAdminTeam({
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Definir Senha de Acesso</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Mínimo 6 caracteres"
-                    minLength={6}
-                    className="w-full rounded-xl border border-slate-300 pl-9.5 pr-3 py-2 text-xs font-medium focus:border-indigo-600 focus:outline-none"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-lg bg-amber-50 p-3 text-[11px] text-amber-800 border border-amber-200">
-                <span className="font-semibold">Atenção:</span> Usuários Master têm permissão total para criar e
-                revogar licenças comerciais.
+              <div className="rounded-xl bg-indigo-50/70 p-3.5 text-xs text-indigo-900 border border-indigo-200 space-y-1">
+                <span className="font-bold flex items-center gap-1.5">
+                  <Send className="h-3.5 w-3.5 text-indigo-600" />
+                  Envio Automático de Convite:
+                </span>
+                <p className="text-[11px] text-indigo-800 leading-relaxed">
+                  Ao confirmar, um link de acesso seguro será despachado para o e-mail informado. O novo Master criará
+                  sua senha pessoal no primeiro acesso.
+                </p>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2">
@@ -217,8 +209,8 @@ export default function MasterAdminTeam({
                   type="submit"
                   className="flex items-center gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 px-5 py-2 text-xs font-bold text-white shadow-xs"
                 >
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Cadastrar Administrador
+                  <Send className="h-3.5 w-3.5" />
+                  <span>Enviar Convite por E-mail</span>
                 </button>
               </div>
             </form>
