@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
 import {
   Calculator,
   FileText,
@@ -14,6 +15,7 @@ import {
   ShieldCheck,
   PhoneCall,
   ExternalLink,
+  ShieldAlert,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -23,6 +25,7 @@ interface SidebarProps {
 
 export default function Sidebar({ companyName = 'SIDIAL FERRAGENS', isLicensed = false }: SidebarProps) {
   const pathname = usePathname();
+  const { isMaster } = useAuth();
 
   const navItems = [
     {
@@ -50,10 +53,10 @@ export default function Sidebar({ companyName = 'SIDIAL FERRAGENS', isLicensed =
       description: 'Legislação e modelos formais',
     },
     {
-      label: 'Licenciamento & Planos',
-      href: '/licenca',
+      label: 'Minha Licença',
+      href: '/minha-licenca',
       icon: KeyRound,
-      description: 'Demo trial e gerador de chaves',
+      description: 'Status e ativação de serial',
     },
     {
       label: 'Configurações',
@@ -86,7 +89,7 @@ export default function Sidebar({ companyName = 'SIDIAL FERRAGENS', isLicensed =
           <div className="mt-4 rounded-lg bg-slate-800/80 p-2.5 border border-slate-700/60">
             <div className="flex items-center gap-1.5 text-[10px] uppercase font-semibold text-slate-400">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-              <span>Licenciado para:</span>
+              <span>Empresa:</span>
             </div>
             <p className="text-xs font-semibold text-white truncate mt-0.5">{companyName}</p>
             <p className="text-[10px] text-slate-400">Conforme Art. 455 da CLT</p>
@@ -119,6 +122,31 @@ export default function Sidebar({ companyName = 'SIDIAL FERRAGENS', isLicensed =
               </Link>
             );
           })}
+
+          {/* MASTER USER EXCLUSIVE NAVIGATION ITEM */}
+          {isMaster && (
+            <div className="pt-3 mt-3 border-t border-slate-800">
+              <span className="px-3 text-[10px] font-bold tracking-wider uppercase text-indigo-400">
+                Acesso Proprietário
+              </span>
+              <Link
+                href="/admin/licencas"
+                className={`mt-1 flex items-center justify-between rounded-lg px-3 py-2.5 text-xs font-medium transition-all ${
+                  pathname === '/admin/licencas'
+                    ? 'bg-indigo-600 text-white shadow-sm font-semibold'
+                    : 'text-indigo-200 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center gap-2.5 truncate">
+                  <ShieldAlert className="h-4 w-4 text-indigo-400 shrink-0" />
+                  <span className="font-semibold">Painel Master (Admin)</span>
+                </div>
+                <span className="rounded bg-indigo-500/30 text-indigo-300 text-[9px] font-bold px-1.5 py-0.5 border border-indigo-400/40">
+                  MASTER
+                </span>
+              </Link>
+            </div>
+          )}
         </nav>
       </div>
 
@@ -130,7 +158,7 @@ export default function Sidebar({ companyName = 'SIDIAL FERRAGENS', isLicensed =
             <span>Suporte & Vendas</span>
           </div>
           <p className="text-[11px] text-slate-400 leading-tight">
-            Dúvidas ou customizações: <br />
+            Dúvidas ou licenças: <br />
             <strong className="text-slate-200">(53) 99122-6768</strong> - Reis
           </p>
           <a
@@ -139,7 +167,7 @@ export default function Sidebar({ companyName = 'SIDIAL FERRAGENS', isLicensed =
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-1.5 w-full rounded bg-slate-700 hover:bg-slate-600 px-2 py-1.5 text-[11px] font-medium text-white transition"
           >
-            <span>Falar no WhatsApp</span>
+            <span>WhatsApp</span>
             <ExternalLink className="h-3 w-3" />
           </a>
         </div>

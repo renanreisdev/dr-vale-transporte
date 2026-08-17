@@ -1,15 +1,24 @@
 'use client';
 
 import React from 'react';
+import { usePathname } from 'next/navigation';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import DemoBanner from './DemoBanner';
 import { useVTStore } from '@/lib/store';
+import { AuthProvider, useAuth } from '@/lib/auth-context';
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
+function ShellContent({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const { period, company, license, refreshLicense, isLoaded } = useVTStore();
+  const { isLoading: isAuthLoading } = useAuth();
 
-  if (!isLoaded) {
+  // If on login or register pages, render directly without sidebar/header
+  if (pathname === '/login' || pathname === '/cadastro') {
+    return <>{children}</>;
+  }
+
+  if (!isLoaded || isAuthLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-slate-50">
         <div className="text-center space-y-3">
@@ -41,5 +50,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function AppShell({ children }: { children: React.ReactNode }) {
+  return (
+    <AuthProvider>
+      <ShellContent>{children}</ShellContent>
+    </AuthProvider>
   );
 }
